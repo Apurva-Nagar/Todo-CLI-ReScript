@@ -1,0 +1,7 @@
+node_modules
+done.txt
+todo.txt
+lib/bs
+.bsb.lock
+.idea
+.merlin
