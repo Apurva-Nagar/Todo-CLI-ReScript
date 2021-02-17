@@ -40,10 +40,10 @@ external argv: array<string> = "argv"
 @bs.scope("Number") @bs.val
 external parseInt: string => int = "parseInt"
 
-let pending_todos_file = "todo.txt"
-let completed_todos_file = "done.txt"
+let pendingTodosFile = "todo.txt"
+let completedTodosFile = "done.txt"
 
-let help_string = "Usage :-
+let helpString = "Usage :-
 $ ./todo add \"todo item\"  # Add a new todo
 $ ./todo ls               # Show remaining todos
 $ ./todo del NUMBER       # Delete a todo
@@ -72,32 +72,32 @@ let writeFile = (filename, lines) => {
 
 let updateFile = (filename, updaterFn) => {
   let contents = readFile(filename)
-  let updated_content = updaterFn(contents)
-  writeFile(filename, updated_content)
+  let updatedContent = updaterFn(contents)
+  writeFile(filename, updatedContent)
 }
 
 let cmdHelp = () => {
-  Js.Console.log(help_string)
+  Js.Console.log(helpString)
 }
 
 let cmdLs = () => {
-  let todos = readFile(pending_todos_file)
+  let todos = readFile(pendingTodosFile)
   if Js.Array2.length(todos) == 0 {
     Js.Console.log("There are no pending todos!")
   } else {
     let length = Js.Array2.length(todos)
-    let formatted_todos = Js.Array2.mapi(Belt.Array.reverse(todos), (todo, index) => {
-      let todo_index = length - index
-      j`[$todo_index] $todo`
+    let formattedTodos = Js.Array2.mapi(Belt.Array.reverse(todos), (todo, index) => {
+      let todoIndex = length - index
+      j`[$todoIndex] $todo`
     })
-    Js.Console.log(Js.Array2.joinWith(formatted_todos, eol))
+    Js.Console.log(Js.Array2.joinWith(formattedTodos, eol))
   }
 }
 
 let cmdAddTodo = text => {
   switch Js.Nullable.toOption(text) {
   | Some(x) => {
-      updateFile(pending_todos_file, todos => Js.Array2.concat(todos, [x]))
+      updateFile(pendingTodosFile, todos => Js.Array2.concat(todos, [x]))
       Js.Console.log(`Added todo: "${x}"`)
     }
   | None => Js.Console.log("Error: Missing todo string. Nothing added!")
@@ -108,7 +108,7 @@ let cmdDelTodo = number => {
   switch Js.Nullable.toOption(number) {
   | Some(x) => {
       let index = parseInt(x)
-      updateFile(pending_todos_file, todos => {
+      updateFile(pendingTodosFile, todos => {
         if index < 1 || index > Js.Array2.length(todos) {
           Js.Console.log(j`Error: todo #$index does not exist. Nothing deleted.`)
         } else {
@@ -126,14 +126,14 @@ let cmdMarkDone = number => {
   switch Js.Nullable.toOption(number) {
   | Some(x) => {
       let index = parseInt(x)
-      let todos = readFile(pending_todos_file)
+      let todos = readFile(pendingTodosFile)
       if index < 1 || index > Js.Array2.length(todos) {
         Js.Console.log(j`Error: todo #$number does not exist.`)
       } else {
         let completedTodo = Js.Array2.spliceInPlace(todos, ~pos=index - 1, ~remove=1, ~add=[])
-        writeFile(pending_todos_file, todos)
+        writeFile(pendingTodosFile, todos)
         let completedTodoStr = `x ${getToday()} ${completedTodo[0]}\n`
-        appendToFile(completed_todos_file, completedTodoStr)
+        appendToFile(completedTodosFile, completedTodoStr)
         Js.Console.log(j`Marked todo #$index as done.`)
       }
     }
@@ -142,8 +142,8 @@ let cmdMarkDone = number => {
 }
 
 let cmdReport = () => {
-  let pending = Js.Array2.length(readFile(pending_todos_file))
-  let completed = Js.Array2.length(readFile(completed_todos_file)) - 1
+  let pending = Js.Array2.length(readFile(pendingTodosFile))
+  let completed = Js.Array2.length(readFile(completedTodosFile)) - 1
   Js.Console.log(
     `${getToday()} Pending : ${Belt.Int.toString(pending)} Completed : ${Belt.Int.toString(
         completed,

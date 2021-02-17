@@ -16,11 +16,11 @@ var getToday = (function() {
     .split("T")[0];
 });
 
-var pending_todos_file = "todo.txt";
+var pendingTodosFile = "todo.txt";
 
-var completed_todos_file = "done.txt";
+var completedTodosFile = "done.txt";
 
-var help_string = "Usage :-\n$ ./todo add \"todo item\"  # Add a new todo\n$ ./todo ls               # Show remaining todos\n$ ./todo del NUMBER       # Delete a todo\n$ ./todo done NUMBER      # Complete a todo\n$ ./todo help             # Show usage\n$ ./todo report           # Statistics";
+var helpString = "Usage :-\n$ ./todo add \"todo item\"  # Add a new todo\n$ ./todo ls               # Show remaining todos\n$ ./todo del NUMBER       # Delete a todo\n$ ./todo done NUMBER      # Complete a todo\n$ ./todo help             # Show usage\n$ ./todo report           # Statistics";
 
 function readFile(filename) {
   if (!Fs.existsSync(filename)) {
@@ -52,27 +52,27 @@ function writeFile(filename, lines) {
 
 function updateFile(filename, updaterFn) {
   var contents = readFile(filename);
-  var updated_content = Curry._1(updaterFn, contents);
-  return writeFile(filename, updated_content);
+  var updatedContent = Curry._1(updaterFn, contents);
+  return writeFile(filename, updatedContent);
 }
 
 function cmdHelp(param) {
-  console.log(help_string);
+  console.log(helpString);
   
 }
 
 function cmdLs(param) {
-  var todos = readFile(pending_todos_file);
+  var todos = readFile(pendingTodosFile);
   if (todos.length === 0) {
     console.log("There are no pending todos!");
     return ;
   }
   var length = todos.length;
-  var formatted_todos = Belt_Array.reverse(todos).map(function (todo, index) {
-        var todo_index = length - index | 0;
-        return "[" + todo_index + "] " + todo;
+  var formattedTodos = Belt_Array.reverse(todos).map(function (todo, index) {
+        var todoIndex = length - index | 0;
+        return "[" + todoIndex + "] " + todo;
       });
-  console.log(formatted_todos.join(Os.EOL));
+  console.log(formattedTodos.join(Os.EOL));
   
 }
 
@@ -80,7 +80,7 @@ function cmdAddTodo(text) {
   if (text == null) {
     console.log("Error: Missing todo string. Nothing added!");
   } else {
-    updateFile(pending_todos_file, (function (todos) {
+    updateFile(pendingTodosFile, (function (todos) {
             return todos.concat([text]);
           }));
     console.log("Added todo: \"" + text + "\"");
@@ -94,7 +94,7 @@ function cmdDelTodo(number) {
     return ;
   }
   var index = Number.parseInt(number);
-  return updateFile(pending_todos_file, (function (todos) {
+  return updateFile(pendingTodosFile, (function (todos) {
                 if (index < 1 || index > todos.length) {
                   console.log("Error: todo #" + index + " does not exist. Nothing deleted.");
                 } else {
@@ -111,22 +111,22 @@ function cmdMarkDone(number) {
     return ;
   }
   var index = Number.parseInt(number);
-  var todos = readFile(pending_todos_file);
+  var todos = readFile(pendingTodosFile);
   if (index < 1 || index > todos.length) {
     console.log("Error: todo #" + number + " does not exist.");
     return ;
   }
   var completedTodo = todos.splice(index - 1 | 0, 1);
-  writeFile(pending_todos_file, todos);
+  writeFile(pendingTodosFile, todos);
   var completedTodoStr = "x " + Curry._1(getToday, undefined) + " " + Caml_array.get(completedTodo, 0) + "\n";
-  appendToFile(completed_todos_file, completedTodoStr);
+  appendToFile(completedTodosFile, completedTodoStr);
   console.log("Marked todo #" + index + " as done.");
   
 }
 
 function cmdReport(param) {
-  var pending = readFile(pending_todos_file).length;
-  var completed = readFile(completed_todos_file).length - 1 | 0;
+  var pending = readFile(pendingTodosFile).length;
+  var completed = readFile(completedTodosFile).length - 1 | 0;
   console.log(Curry._1(getToday, undefined) + " Pending : " + String(pending) + " Completed : " + String(completed));
   
 }
@@ -138,7 +138,7 @@ var command = args.length >= 3 ? Caml_array.get(args, 2) : null;
 var arg = args.length >= 4 ? Caml_array.get(args, 3) : null;
 
 if (command == null) {
-  console.log(help_string);
+  console.log(helpString);
 } else {
   switch (command) {
     case "add" :
@@ -151,7 +151,7 @@ if (command == null) {
         cmdMarkDone(arg);
         break;
     case "help" :
-        console.log(help_string);
+        console.log(helpString);
         break;
     case "ls" :
         cmdLs(undefined);
@@ -160,15 +160,15 @@ if (command == null) {
         cmdReport(undefined);
         break;
     default:
-      console.log(help_string);
+      console.log(helpString);
   }
 }
 
 exports.encoding = encoding;
 exports.getToday = getToday;
-exports.pending_todos_file = pending_todos_file;
-exports.completed_todos_file = completed_todos_file;
-exports.help_string = help_string;
+exports.pendingTodosFile = pendingTodosFile;
+exports.completedTodosFile = completedTodosFile;
+exports.helpString = helpString;
 exports.readFile = readFile;
 exports.appendToFile = appendToFile;
 exports.writeFile = writeFile;
