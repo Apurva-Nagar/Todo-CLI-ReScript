@@ -4,7 +4,6 @@
 var Fs = require("fs");
 var Os = require("os");
 var Curry = require("bs-platform/lib/js/curry.js");
-var Process = require("process");
 var Belt_Array = require("bs-platform/lib/js/belt_Array.js");
 var Caml_array = require("bs-platform/lib/js/caml_array.js");
 
@@ -132,7 +131,7 @@ function cmdReport(param) {
   
 }
 
-var args = Process.argv;
+var args = process.argv;
 
 var command = args.length >= 3 ? Caml_array.get(args, 2) : null;
 
