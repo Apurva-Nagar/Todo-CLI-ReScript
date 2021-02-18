@@ -98,50 +98,52 @@ let cmdLs = () => {
 }
 
 let cmdAddTodo = text => {
-  switch text {
-  | Some(x) => {
+  let cmdStatus = text->Belt.Option.mapWithDefault(
+    "Error: Missing todo string. Nothing added!",
+    x => {
       updateFile(pendingTodosFile, todos => Js.Array2.concat(todos, [x]))
-      Js.Console.log(`Added todo: "${x}"`)
-    }
-  | None => Js.Console.log("Error: Missing todo string. Nothing added!")
-  }
+      `Added todo: "${x}"`
+    },
+  )
+  Js.Console.log(cmdStatus)
 }
 
 let cmdDelTodo = number => {
-  switch number {
-  | Some(x) => {
-      let index = parseInt(x)
-      updateFile(pendingTodosFile, todos => {
-        if index < 1 || index > Js.Array2.length(todos) {
-          Js.Console.log(j`Error: todo #$index does not exist. Nothing deleted.`)
-        } else {
-          let _ = Js.Array2.spliceInPlace(todos, ~pos=index, ~remove=1, ~add=[])
-          Js.Console.log(j`Deleted todo #$number`)
-        }
-        todos
-      })
-    }
-  | None => Js.Console.log("Error: Missing NUMBER for deleting todo.")
-  }
-}
-
-let cmdMarkDone = number => {
-  switch number {
-  | Some(x) => {
+  let cmdStatus = number->Belt.Option.mapWithDefault(
+    "Error: Missing NUMBER for deleting todo.",
+    x => {
       let index = parseInt(x)
       let todos = readFile(pendingTodosFile)
       if index < 1 || index > Js.Array2.length(todos) {
-        Js.Console.log(j`Error: todo #$number does not exist.`)
+        j`Error: todo #$index does not exist. Nothing deleted.`
+      } else {
+        updateFile(pendingTodosFile, todos => {
+          let _ = Js.Array2.spliceInPlace(todos, ~pos=index, ~remove=1, ~add=[])
+          todos
+        })
+        j`Deleted todo #$number`
+      }
+    },
+  )
+  Js.Console.log(cmdStatus)
+}
+
+let cmdMarkDone = number => {
+  let cmdStatus =
+    number->Belt.Option.mapWithDefault("Error: Missing NUMBER for marking todo as done.", x => {
+      let index = parseInt(x)
+      let todos = readFile(pendingTodosFile)
+      if index < 1 || index > Js.Array2.length(todos) {
+        j`Error: todo #$number does not exist.`
       } else {
         let completedTodo = Js.Array2.spliceInPlace(todos, ~pos=index - 1, ~remove=1, ~add=[])
         writeFile(pendingTodosFile, todos)
         let completedTodoStr = `x ${getToday()} ${completedTodo[0]}\n`
         appendToFile(completedTodosFile, completedTodoStr)
-        Js.Console.log(j`Marked todo #$index as done.`)
+        j`Marked todo #$index as done.`
       }
-    }
-  | None => Js.Console.log("Error: Missing NUMBER for marking todo as done.")
-  }
+    })
+  Js.Console.log(cmdStatus)
 }
 
 let cmdReport = () => {

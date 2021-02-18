@@ -6,6 +6,7 @@ var Os = require("os");
 var Curry = require("bs-platform/lib/js/curry.js");
 var Belt_Array = require("bs-platform/lib/js/belt_Array.js");
 var Caml_array = require("bs-platform/lib/js/caml_array.js");
+var Belt_Option = require("bs-platform/lib/js/belt_Option.js");
 
 var encoding = "utf8";
 
@@ -77,50 +78,48 @@ function cmdLs(param) {
 }
 
 function cmdAddTodo(text) {
-  if (text !== undefined) {
-    updateFile(pendingTodosFile, (function (todos) {
-            return todos.concat([text]);
-          }));
-    console.log("Added todo: \"" + text + "\"");
-  } else {
-    console.log("Error: Missing todo string. Nothing added!");
-  }
+  var cmdStatus = Belt_Option.mapWithDefault(text, "Error: Missing todo string. Nothing added!", (function (x) {
+          updateFile(pendingTodosFile, (function (todos) {
+                  return todos.concat([x]);
+                }));
+          return "Added todo: \"" + x + "\"";
+        }));
+  console.log(cmdStatus);
   
 }
 
 function cmdDelTodo(number) {
-  if (number !== undefined) {
-    var index = Number.parseInt(number);
-    return updateFile(pendingTodosFile, (function (todos) {
-                  if (index < 1 || index > todos.length) {
-                    console.log("Error: todo #" + index + " does not exist. Nothing deleted.");
-                  } else {
+  var cmdStatus = Belt_Option.mapWithDefault(number, "Error: Missing NUMBER for deleting todo.", (function (x) {
+          var index = Number.parseInt(x);
+          var todos = readFile(pendingTodosFile);
+          if (index < 1 || index > todos.length) {
+            return "Error: todo #" + index + " does not exist. Nothing deleted.";
+          } else {
+            updateFile(pendingTodosFile, (function (todos) {
                     todos.splice(index, 1);
-                    console.log("Deleted todo #" + number);
-                  }
-                  return todos;
-                }));
-  }
-  console.log("Error: Missing NUMBER for deleting todo.");
+                    return todos;
+                  }));
+            return "Deleted todo #" + number;
+          }
+        }));
+  console.log(cmdStatus);
   
 }
 
 function cmdMarkDone(number) {
-  if (number !== undefined) {
-    var index = Number.parseInt(number);
-    var todos = readFile(pendingTodosFile);
-    if (index < 1 || index > todos.length) {
-      console.log("Error: todo #" + number + " does not exist.");
-      return ;
-    }
-    var completedTodo = todos.splice(index - 1 | 0, 1);
-    writeFile(pendingTodosFile, todos);
-    var completedTodoStr = "x " + Curry._1(getToday, undefined) + " " + Caml_array.get(completedTodo, 0) + "\n";
-    appendToFile(completedTodosFile, completedTodoStr);
-    console.log("Marked todo #" + index + " as done.");
-    return ;
-  }
-  console.log("Error: Missing NUMBER for marking todo as done.");
+  var cmdStatus = Belt_Option.mapWithDefault(number, "Error: Missing NUMBER for marking todo as done.", (function (x) {
+          var index = Number.parseInt(x);
+          var todos = readFile(pendingTodosFile);
+          if (index < 1 || index > todos.length) {
+            return "Error: todo #" + number + " does not exist.";
+          }
+          var completedTodo = todos.splice(index - 1 | 0, 1);
+          writeFile(pendingTodosFile, todos);
+          var completedTodoStr = "x " + Curry._1(getToday, undefined) + " " + Caml_array.get(completedTodo, 0) + "\n";
+          appendToFile(completedTodosFile, completedTodoStr);
+          return "Marked todo #" + index + " as done.";
+        }));
+  console.log(cmdStatus);
   
 }
 
