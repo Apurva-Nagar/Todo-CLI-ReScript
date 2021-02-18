@@ -86,11 +86,14 @@ let cmdLs = () => {
     Js.Console.log("There are no pending todos!")
   } else {
     let length = Js.Array2.length(todos)
-    let formattedTodos = Js.Array2.mapi(Belt.Array.reverse(todos), (todo, index) => {
-      let todoIndex = length - index
-      j`[$todoIndex] $todo`
-    })
-    Js.Console.log(Js.Array2.joinWith(formattedTodos, eol))
+    let formattedTodos =
+      todos
+      ->Belt.Array.reverse
+      ->Belt.Array.reduceWithIndex("", (acc, todo, index) => {
+        let todoIndex = length - index
+        acc ++ j`[$todoIndex] $todo\n`
+      })
+    Js.Console.log(formattedTodos)
   }
 }
 

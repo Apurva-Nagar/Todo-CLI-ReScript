@@ -68,11 +68,11 @@ function cmdLs(param) {
     return ;
   }
   var length = todos.length;
-  var formattedTodos = Belt_Array.reverse(todos).map(function (todo, index) {
-        var todoIndex = length - index | 0;
-        return "[" + todoIndex + "] " + todo;
-      });
-  console.log(formattedTodos.join(Os.EOL));
+  var formattedTodos = Belt_Array.reduceWithIndex(Belt_Array.reverse(todos), "", (function (acc, todo, index) {
+          var todoIndex = length - index | 0;
+          return acc + ("[" + todoIndex + "] " + todo + "\n");
+        }));
+  console.log(formattedTodos);
   
 }
 
