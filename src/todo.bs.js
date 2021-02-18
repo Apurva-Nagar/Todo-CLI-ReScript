@@ -77,50 +77,50 @@ function cmdLs(param) {
 }
 
 function cmdAddTodo(text) {
-  if (text == null) {
-    console.log("Error: Missing todo string. Nothing added!");
-  } else {
+  if (text !== undefined) {
     updateFile(pendingTodosFile, (function (todos) {
             return todos.concat([text]);
           }));
     console.log("Added todo: \"" + text + "\"");
+  } else {
+    console.log("Error: Missing todo string. Nothing added!");
   }
   
 }
 
 function cmdDelTodo(number) {
-  if (number == null) {
-    console.log("Error: Missing NUMBER for deleting todo.");
-    return ;
+  if (number !== undefined) {
+    var index = Number.parseInt(number);
+    return updateFile(pendingTodosFile, (function (todos) {
+                  if (index < 1 || index > todos.length) {
+                    console.log("Error: todo #" + index + " does not exist. Nothing deleted.");
+                  } else {
+                    todos.splice(index, 1);
+                    console.log("Deleted todo #" + number);
+                  }
+                  return todos;
+                }));
   }
-  var index = Number.parseInt(number);
-  return updateFile(pendingTodosFile, (function (todos) {
-                if (index < 1 || index > todos.length) {
-                  console.log("Error: todo #" + index + " does not exist. Nothing deleted.");
-                } else {
-                  todos.splice(index, 1);
-                  console.log("Deleted todo #" + number);
-                }
-                return todos;
-              }));
+  console.log("Error: Missing NUMBER for deleting todo.");
+  
 }
 
 function cmdMarkDone(number) {
-  if (number == null) {
-    console.log("Error: Missing NUMBER for marking todo as done.");
+  if (number !== undefined) {
+    var index = Number.parseInt(number);
+    var todos = readFile(pendingTodosFile);
+    if (index < 1 || index > todos.length) {
+      console.log("Error: todo #" + number + " does not exist.");
+      return ;
+    }
+    var completedTodo = todos.splice(index - 1 | 0, 1);
+    writeFile(pendingTodosFile, todos);
+    var completedTodoStr = "x " + Curry._1(getToday, undefined) + " " + Caml_array.get(completedTodo, 0) + "\n";
+    appendToFile(completedTodosFile, completedTodoStr);
+    console.log("Marked todo #" + index + " as done.");
     return ;
   }
-  var index = Number.parseInt(number);
-  var todos = readFile(pendingTodosFile);
-  if (index < 1 || index > todos.length) {
-    console.log("Error: todo #" + number + " does not exist.");
-    return ;
-  }
-  var completedTodo = todos.splice(index - 1 | 0, 1);
-  writeFile(pendingTodosFile, todos);
-  var completedTodoStr = "x " + Curry._1(getToday, undefined) + " " + Caml_array.get(completedTodo, 0) + "\n";
-  appendToFile(completedTodosFile, completedTodoStr);
-  console.log("Marked todo #" + index + " as done.");
+  console.log("Error: Missing NUMBER for marking todo as done.");
   
 }
 
@@ -131,15 +131,11 @@ function cmdReport(param) {
   
 }
 
-var args = process.argv;
+var command = Belt_Array.get(process.argv, 2);
 
-var command = args.length >= 3 ? Caml_array.get(args, 2) : null;
+var arg = Belt_Array.get(process.argv, 3);
 
-var arg = args.length >= 4 ? Caml_array.get(args, 3) : null;
-
-if (command == null) {
-  console.log(helpString);
-} else {
+if (command !== undefined) {
   switch (command) {
     case "add" :
         cmdAddTodo(arg);
@@ -162,6 +158,8 @@ if (command == null) {
     default:
       console.log(helpString);
   }
+} else {
+  console.log(helpString);
 }
 
 exports.encoding = encoding;
@@ -179,7 +177,6 @@ exports.cmdAddTodo = cmdAddTodo;
 exports.cmdDelTodo = cmdDelTodo;
 exports.cmdMarkDone = cmdMarkDone;
 exports.cmdReport = cmdReport;
-exports.args = args;
 exports.command = command;
 exports.arg = arg;
-/* args Not a pure module */
+/* command Not a pure module */

@@ -98,7 +98,7 @@ let cmdLs = () => {
 }
 
 let cmdAddTodo = text => {
-  switch Js.Nullable.toOption(text) {
+  switch text {
   | Some(x) => {
       updateFile(pendingTodosFile, todos => Js.Array2.concat(todos, [x]))
       Js.Console.log(`Added todo: "${x}"`)
@@ -108,7 +108,7 @@ let cmdAddTodo = text => {
 }
 
 let cmdDelTodo = number => {
-  switch Js.Nullable.toOption(number) {
+  switch number {
   | Some(x) => {
       let index = parseInt(x)
       updateFile(pendingTodosFile, todos => {
@@ -126,7 +126,7 @@ let cmdDelTodo = number => {
 }
 
 let cmdMarkDone = number => {
-  switch Js.Nullable.toOption(number) {
+  switch number {
   | Some(x) => {
       let index = parseInt(x)
       let todos = readFile(pendingTodosFile)
@@ -154,21 +154,10 @@ let cmdReport = () => {
   )
 }
 
-let args = argv
+let command = argv->Belt.Array.get(2)
+let arg = argv->Belt.Array.get(3)
 
-let command = if Js.Array2.length(args) >= 3 {
-  Js.Nullable.return(args[2])
-} else {
-  Js.Nullable.null
-}
-
-let arg = if Js.Array2.length(args) >= 4 {
-  Js.Nullable.return(args[3])
-} else {
-  Js.Nullable.null
-}
-
-switch Js.Nullable.toOption(command) {
+switch command {
 | Some(x) =>
   switch x {
   | "help" => cmdHelp()
