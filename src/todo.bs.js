@@ -64,13 +64,13 @@ function cmdHelp(param) {
 
 function cmdLs(param) {
   var todos = readFile(pendingTodosFile);
-  if (todos.length === 0) {
+  var todosCount = todos.length;
+  if (todosCount === 0) {
     console.log("There are no pending todos!");
     return ;
   }
-  var length = todos.length;
   var formattedTodos = Belt_Array.reduceWithIndex(Belt_Array.reverse(todos), "", (function (acc, todo, index) {
-          var todoIndex = length - index | 0;
+          var todoIndex = todosCount - index | 0;
           return acc + ("[" + todoIndex + "] " + todo + "\n");
         }));
   console.log(formattedTodos);
@@ -90,13 +90,12 @@ function cmdAddTodo(text) {
 
 function cmdDelTodo(number) {
   var cmdStatus = Belt_Option.mapWithDefault(number, "Error: Missing NUMBER for deleting todo.", (function (x) {
-          var index = Number.parseInt(x);
           var todos = readFile(pendingTodosFile);
-          if (index < 1 || index > todos.length) {
-            return "Error: todo #" + index + " does not exist. Nothing deleted.";
+          if (x < 1 || x > todos.length) {
+            return "Error: todo #" + x + " does not exist. Nothing deleted.";
           } else {
             updateFile(pendingTodosFile, (function (todos) {
-                    todos.splice(index, 1);
+                    todos.splice(x, 1);
                     return todos;
                   }));
             return "Deleted todo #" + number;
@@ -108,16 +107,15 @@ function cmdDelTodo(number) {
 
 function cmdMarkDone(number) {
   var cmdStatus = Belt_Option.mapWithDefault(number, "Error: Missing NUMBER for marking todo as done.", (function (x) {
-          var index = Number.parseInt(x);
           var todos = readFile(pendingTodosFile);
-          if (index < 1 || index > todos.length) {
-            return "Error: todo #" + number + " does not exist.";
+          if (x < 1 || x > todos.length) {
+            return "Error: todo #" + x + " does not exist.";
           }
-          var completedTodo = todos.splice(index - 1 | 0, 1);
+          var completedTodo = todos.splice(x - 1 | 0, 1);
           writeFile(pendingTodosFile, todos);
           var completedTodoStr = "x " + Curry._1(getToday, undefined) + " " + Caml_array.get(completedTodo, 0) + "\n";
           appendToFile(completedTodosFile, completedTodoStr);
-          return "Marked todo #" + index + " as done.";
+          return "Marked todo #" + x + " as done.";
         }));
   console.log(cmdStatus);
   
@@ -130,35 +128,70 @@ function cmdReport(param) {
   
 }
 
+function optionStringToOptionInteger(value) {
+  return Number.parseInt(value);
+}
+
 var command = Belt_Array.get(process.argv, 2);
 
 var arg = Belt_Array.get(process.argv, 3);
 
-if (command !== undefined) {
-  switch (command) {
-    case "add" :
-        cmdAddTodo(arg);
-        break;
-    case "del" :
-        cmdDelTodo(arg);
-        break;
-    case "done" :
-        cmdMarkDone(arg);
-        break;
-    case "help" :
+var commandType = Belt_Option.mapWithDefault(command, /* Help */0, (function (x) {
+        switch (x) {
+          case "add" :
+              return {
+                      TAG: /* Add */0,
+                      _0: arg
+                    };
+          case "del" :
+              var arg$1 = Belt_Option.flatMap(arg, optionStringToOptionInteger);
+              return {
+                      TAG: /* Delete */1,
+                      _0: arg$1
+                    };
+          case "done" :
+              var arg$2 = Belt_Option.flatMap(arg, optionStringToOptionInteger);
+              return {
+                      TAG: /* Done */2,
+                      _0: arg$2
+                    };
+          case "help" :
+              return /* Help */0;
+          case "ls" :
+              return /* List */2;
+          case "report" :
+              return /* Report */1;
+          default:
+            return /* Help */0;
+        }
+      }));
+
+if (typeof commandType === "number") {
+  switch (commandType) {
+    case /* Help */0 :
         console.log(helpString);
         break;
-    case "ls" :
-        cmdLs(undefined);
-        break;
-    case "report" :
+    case /* Report */1 :
         cmdReport(undefined);
         break;
-    default:
-      console.log(helpString);
+    case /* List */2 :
+        cmdLs(undefined);
+        break;
+    
   }
 } else {
-  console.log(helpString);
+  switch (commandType.TAG | 0) {
+    case /* Add */0 :
+        cmdAddTodo(commandType._0);
+        break;
+    case /* Delete */1 :
+        cmdDelTodo(commandType._0);
+        break;
+    case /* Done */2 :
+        cmdMarkDone(commandType._0);
+        break;
+    
+  }
 }
 
 exports.encoding = encoding;
@@ -176,6 +209,8 @@ exports.cmdAddTodo = cmdAddTodo;
 exports.cmdDelTodo = cmdDelTodo;
 exports.cmdMarkDone = cmdMarkDone;
 exports.cmdReport = cmdReport;
+exports.optionStringToOptionInteger = optionStringToOptionInteger;
 exports.command = command;
 exports.arg = arg;
+exports.commandType = commandType;
 /* command Not a pure module */

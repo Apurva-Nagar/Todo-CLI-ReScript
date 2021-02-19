@@ -82,15 +82,15 @@ let cmdHelp = () => {
 
 let cmdLs = () => {
   let todos = readFile(pendingTodosFile)
-  if Js.Array2.length(todos) == 0 {
+  let todosCount = todos->Belt.Array.length
+  if todosCount == 0 {
     Js.Console.log("There are no pending todos!")
   } else {
-    let length = Js.Array2.length(todos)
     let formattedTodos =
       todos
       ->Belt.Array.reverse
       ->Belt.Array.reduceWithIndex("", (acc, todo, index) => {
-        let todoIndex = length - index
+        let todoIndex = todosCount - index
         acc ++ j`[$todoIndex] $todo\n`
       })
     Js.Console.log(formattedTodos)
@@ -112,13 +112,12 @@ let cmdDelTodo = number => {
   let cmdStatus = number->Belt.Option.mapWithDefault(
     "Error: Missing NUMBER for deleting todo.",
     x => {
-      let index = parseInt(x)
       let todos = readFile(pendingTodosFile)
-      if index < 1 || index > Js.Array2.length(todos) {
-        j`Error: todo #$index does not exist. Nothing deleted.`
+      if x < 1 || x > todos->Belt.Array.length {
+        j`Error: todo #$x does not exist. Nothing deleted.`
       } else {
         updateFile(pendingTodosFile, todos => {
-          let _ = Js.Array2.spliceInPlace(todos, ~pos=index, ~remove=1, ~add=[])
+          let _ = Js.Array2.spliceInPlace(todos, ~pos=x, ~remove=1, ~add=[])
           todos
         })
         j`Deleted todo #$number`
@@ -131,24 +130,23 @@ let cmdDelTodo = number => {
 let cmdMarkDone = number => {
   let cmdStatus =
     number->Belt.Option.mapWithDefault("Error: Missing NUMBER for marking todo as done.", x => {
-      let index = parseInt(x)
       let todos = readFile(pendingTodosFile)
-      if index < 1 || index > Js.Array2.length(todos) {
-        j`Error: todo #$number does not exist.`
+      if x < 1 || x > todos->Belt.Array.length {
+        j`Error: todo #$x does not exist.`
       } else {
-        let completedTodo = Js.Array2.spliceInPlace(todos, ~pos=index - 1, ~remove=1, ~add=[])
+        let completedTodo = Js.Array2.spliceInPlace(todos, ~pos=x - 1, ~remove=1, ~add=[])
         writeFile(pendingTodosFile, todos)
         let completedTodoStr = `x ${getToday()} ${completedTodo[0]}\n`
         appendToFile(completedTodosFile, completedTodoStr)
-        j`Marked todo #$index as done.`
+        j`Marked todo #$x as done.`
       }
     })
   Js.Console.log(cmdStatus)
 }
 
 let cmdReport = () => {
-  let pending = Js.Array2.length(readFile(pendingTodosFile))
-  let completed = Js.Array2.length(readFile(completedTodosFile)) - 1
+  let pending = readFile(pendingTodosFile)->Belt.Array.length
+  let completed = readFile(completedTodosFile)->Belt.Array.length - 1
   Js.Console.log(
     `${getToday()} Pending : ${Belt.Int.toString(pending)} Completed : ${Belt.Int.toString(
         completed,
@@ -156,19 +154,44 @@ let cmdReport = () => {
   )
 }
 
+let optionStringToOptionInteger = value => {
+  Some(parseInt(value))
+}
+
 let command = argv->Belt.Array.get(2)
 let arg = argv->Belt.Array.get(3)
 
-switch command {
-| Some(x) =>
+type argument =
+  | Add(option<string>)
+  | Delete(option<int>)
+  | Done(option<int>)
+  | Help
+  | Report
+  | List
+
+let commandType = command->Belt.Option.mapWithDefault(Help, x => {
   switch x {
-  | "help" => cmdHelp()
-  | "ls" => cmdLs()
-  | "add" => cmdAddTodo(arg)
-  | "del" => cmdDelTodo(arg)
-  | "done" => cmdMarkDone(arg)
-  | "report" => cmdReport()
-  | _ => cmdHelp()
+  | "help" => Help
+  | "ls" => List
+  | "add" => Add(arg)
+  | "del" => {
+      let arg = arg->Belt.Option.flatMap(optionStringToOptionInteger)
+      Delete(arg)
+    }
+  | "done" => {
+      let arg = arg->Belt.Option.flatMap(optionStringToOptionInteger)
+      Done(arg)
+    }
+  | "report" => Report
+  | _ => Help
   }
-| None => cmdHelp()
+})
+
+switch commandType {
+| Help => cmdHelp()
+| List => cmdLs()
+| Add(arg) => cmdAddTodo(arg)
+| Delete(arg) => cmdDelTodo(arg)
+| Done(arg) => cmdMarkDone(arg)
+| Report => cmdReport()
 }
