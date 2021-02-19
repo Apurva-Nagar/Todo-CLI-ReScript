@@ -175,12 +175,12 @@ let commandType = command->Belt.Option.mapWithDefault(Help, x => {
   | "ls" => List
   | "add" => Add(arg)
   | "del" => {
-      let arg = arg->Belt.Option.flatMap(optionStringToOptionInteger)
-      Delete(arg)
+      let index = arg->Belt.Option.flatMap(optionStringToOptionInteger)
+      Delete(index)
     }
   | "done" => {
-      let arg = arg->Belt.Option.flatMap(optionStringToOptionInteger)
-      Done(arg)
+      let index = arg->Belt.Option.flatMap(optionStringToOptionInteger)
+      Done(index)
     }
   | "report" => Report
   | _ => Help

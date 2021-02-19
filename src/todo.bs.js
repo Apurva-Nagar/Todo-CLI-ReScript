@@ -144,16 +144,16 @@ var commandType = Belt_Option.mapWithDefault(command, /* Help */0, (function (x)
                       _0: arg
                     };
           case "del" :
-              var arg$1 = Belt_Option.flatMap(arg, optionStringToOptionInteger);
+              var index = Belt_Option.flatMap(arg, optionStringToOptionInteger);
               return {
                       TAG: /* Delete */1,
-                      _0: arg$1
+                      _0: index
                     };
           case "done" :
-              var arg$2 = Belt_Option.flatMap(arg, optionStringToOptionInteger);
+              var index$1 = Belt_Option.flatMap(arg, optionStringToOptionInteger);
               return {
                       TAG: /* Done */2,
-                      _0: arg$2
+                      _0: index$1
                     };
           case "help" :
               return /* Help */0;
